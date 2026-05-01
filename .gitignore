@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Data & Reports (Massive files)
+data/*.csv
+!data/.gitkeep
+reports/*.csv
+reports/*.json
+logs/*.log
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store

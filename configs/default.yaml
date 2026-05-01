@@ -1,0 +1,88 @@
+# ═══════════════════════════════════════════════════════════════
+#  FOREXBOT Configuration — v3 (Volatility Breakout System)
+#  All strategy parameters are config-driven. No hardcoding.
+# ═══════════════════════════════════════════════════════════════
+
+account_currency: USD
+
+# Per-symbol settings (pip size + contract size differ per instrument)
+symbols:
+  EURUSD:
+    pip_size: 0.0001
+    contract_size: 100000
+  USDJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  EURJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  XAUUSD:
+    pip_size: 0.1
+    contract_size: 1
+  GBPJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  CHFJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  CADJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  USDCAD:
+    pip_size: 0.0001
+    contract_size: 100000
+  BTCUSD:
+    pip_size: 1.0
+    contract_size: 1
+
+# Risk management
+risk:
+  per_trade: 0.02                  # 2% risk per trade on elite setups
+  max_trades_per_session: 3        # max simultaneous positions
+  max_daily_drawdown: 0.05         # 5% daily drawdown kill switch
+
+# Strategy parameters (v3: Volatility Breakout)
+strategy:
+  trend_method: ema                # Trend filter
+  ema_fast: 50
+  ema_slow: 200
+
+  # Volatility squeeze detection
+  squeeze_atr_fast: 14
+  squeeze_atr_slow: 50
+  squeeze_ratio: 0.85              # Confirmed edge
+  min_squeeze_bars: 3              # Confirmed edge
+
+  # Breakout detection
+  breakout_channel: 48             # 2-day breakouts only
+  min_breakout_atr_mult: 0.5       # Strong momentum only
+
+  # Exits — Fixed RR
+  initial_sl_atr: 1.5
+  rr_ratio: 2.5                    # 1:2.5 RR ratio
+
+  # Filters
+  min_atr_threshold: 0.0005        # absolute minimum ATR
+  min_bars_between_trades: 15      # cooldown
+  allow_multiple_positions: false  # one position per symbol
+  trading_sessions:
+    - LONDON
+    - NEW_YORK
+
+# Timeframe assignment (explicit — never mix)
+timeframes:
+  execution: H1                    # entry, breakout, ATR
+  trend: H4                        # trend detection
+
+# Backtest settings
+backtest:
+  spread_pips: 1.5
+  slippage_pips: 0.5
+  initial_balance: 10000
+  execution_mode: conservative     # conservative | optimistic | random
+  min_trades: 100                  # results invalid below this count
+
+# Logging
+logging:
+  level: INFO
+  format: json                     # structured JSON to file, human to console

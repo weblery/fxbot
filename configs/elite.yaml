@@ -1,11 +1,11 @@
 # ═══════════════════════════════════════════════════════════════
-#  FOREXBOT Configuration — v3 (Volatility Breakout System)
-#  All strategy parameters are config-driven. No hardcoding.
+#  FOREXBOT Configuration — ELITE PORTFOLIO (High Freq + High Win Rate)
+#  Relaxed parameters to maintain 3+ trades/week, but toxic pairs removed.
 # ═══════════════════════════════════════════════════════════════
 
 account_currency: USD
 
-# Per-symbol settings (pip size + contract size differ per instrument)
+# Per-symbol settings (Underperforming pairs removed)
 symbols:
   EURUSD:
     pip_size: 0.0001
@@ -16,9 +16,6 @@ symbols:
   EURJPY:
     pip_size: 0.01
     contract_size: 100000
-  XAUUSD:
-    pip_size: 0.1
-    contract_size: 1
   GBPJPY:
     pip_size: 0.01
     contract_size: 100000
@@ -34,19 +31,7 @@ symbols:
   BTCUSD:
     pip_size: 1.0
     contract_size: 1
-  AUDJPY:
-    pip_size: 0.01
-    contract_size: 100000
-  AUDUSD:
-    pip_size: 0.0001
-    contract_size: 100000
-  GBPUSD:
-    pip_size: 0.0001
-    contract_size: 100000
   NZDUSD:
-    pip_size: 0.0001
-    contract_size: 100000
-  USDCHF:
     pip_size: 0.0001
     contract_size: 100000
 
@@ -66,15 +51,15 @@ strategy:
   squeeze_atr_fast: 14
   squeeze_atr_slow: 50
   squeeze_ratio: 0.85              # Confirmed edge
-  min_squeeze_bars: 3              # Confirmed edge
+  min_squeeze_bars: 1              # RELAXED from 3 to 1
 
   # ATR settings
   atr_period: 14
   atr_multiplier: 2.0
 
   # Breakout detection
-  breakout_channel: 48             # 2-day breakouts only
-  min_breakout_atr_mult: 0.5       # Strong momentum only
+  breakout_channel: 24             # RELAXED from 48 (2-day) to 24 (1-day)
+  min_breakout_atr_mult: 0.3       # RELAXED from 0.5 to 0.3 (allows weaker momentum)
 
   # Pullback and Entry
   pullback_ema: 20

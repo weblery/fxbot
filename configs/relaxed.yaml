@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════
-#  FOREXBOT Configuration — v3 (Volatility Breakout System)
+#  FOREXBOT Configuration — v3 (Volatility Breakout System - RELAXED)
 #  All strategy parameters are config-driven. No hardcoding.
 # ═══════════════════════════════════════════════════════════════
 
@@ -66,15 +66,15 @@ strategy:
   squeeze_atr_fast: 14
   squeeze_atr_slow: 50
   squeeze_ratio: 0.85              # Confirmed edge
-  min_squeeze_bars: 3              # Confirmed edge
+  min_squeeze_bars: 1              # RELAXED from 3 to 1
 
   # ATR settings
   atr_period: 14
   atr_multiplier: 2.0
 
   # Breakout detection
-  breakout_channel: 48             # 2-day breakouts only
-  min_breakout_atr_mult: 0.5       # Strong momentum only
+  breakout_channel: 24             # RELAXED from 48 (2-day) to 24 (1-day)
+  min_breakout_atr_mult: 0.3       # RELAXED from 0.5 to 0.3 (allows weaker momentum)
 
   # Pullback and Entry
   pullback_ema: 20

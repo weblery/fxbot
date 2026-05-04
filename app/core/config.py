@@ -49,9 +49,17 @@ class StrategyConfig(BaseModel):
     squeeze_ratio: float = 0.85
     min_squeeze_bars: int = 3
 
+    # ATR settings
+    atr_period: int = 14
+    atr_multiplier: float = 2.0
+
     # Breakout detection
     breakout_channel: int = 48
     min_breakout_atr_mult: float = 0.5
+
+    # Pullback and Entry
+    pullback_ema: int = 20
+    min_body_ratio: float = 0.5
 
     # Exits
     initial_sl_atr: float = 1.5

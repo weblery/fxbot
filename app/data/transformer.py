@@ -49,6 +49,13 @@ def transform_raw_data(df: pd.DataFrame) -> pd.DataFrame:
         elif not pd.api.types.is_datetime64_any_dtype(result["time"]):
             result["time"] = pd.to_datetime(result["time"], utc=True)
 
+    # Map MT5 specific volume names to standard 'volume'
+    if "volume" not in result.columns:
+        if "tick_volume" in result.columns:
+            result = result.rename(columns={"tick_volume": "volume"})
+        elif "real_volume" in result.columns:
+            result = result.rename(columns={"real_volume": "volume"})
+
     # Ensure required columns exist
     for col in STANDARD_COLUMNS:
         if col not in result.columns:

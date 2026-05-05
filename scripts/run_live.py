@@ -69,8 +69,8 @@ def main():
                     last_heartbeat = now
 
                 # 4. Hourly Scan
-                # Check for signals at 5 minutes past every hour (gives MT5 time to sync)
-                if now.minute == 5 and now.second < 10:
+                # Check for signals at 10 minutes past every hour (maximum safety for sync)
+                if now.minute == 10 and now.second < 10:
                     logger.info(f"🔔 Hourly Scan Started: {now.strftime('%Y-%m-%d %H:%M')}")
                     
                     for symbol in settings.symbols.keys():

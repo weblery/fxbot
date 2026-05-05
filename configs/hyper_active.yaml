@@ -1,0 +1,97 @@
+# ═══════════════════════════════════════════════════════════════
+#  FOREXBOT Configuration — HYPER ACTIVE (Target: 3+ Trades/Day)
+#  Highly relaxed gates designed for maximum trade frequency.
+# ═══════════════════════════════════════════════════════════════
+
+account_currency: USD
+
+# Per-symbol settings (Using the Elite 9 Pairs for high win rate)
+symbols:
+  EURUSD:
+    pip_size: 0.0001
+    contract_size: 100000
+  USDJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  EURJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  GBPJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  CHFJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  CADJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  USDCAD:
+    pip_size: 0.0001
+    contract_size: 100000
+  BTCUSD:
+    pip_size: 1.0
+    contract_size: 1
+  NZDUSD:
+    pip_size: 0.0001
+    contract_size: 100000
+
+# Risk management
+risk:
+  per_trade: 0.01                  # Lowered to 1% since frequency is much higher
+  max_trades_per_session: 5        # Increased to allow more simultaneous positions
+  max_daily_drawdown: 0.06         # 6% daily drawdown kill switch
+
+# Strategy parameters (v3: Volatility Breakout)
+strategy:
+  trend_method: ema                # Trend filter
+  ema_fast: 20                     # Faster trend detection (was 50)
+  ema_slow: 100                    # Faster trend detection (was 200)
+
+  # Volatility squeeze detection (DISABLED for higher frequency)
+  squeeze_atr_fast: 14
+  squeeze_atr_slow: 50
+  squeeze_ratio: 1.0               # Anything passes
+  min_squeeze_bars: 0              # No squeeze required at all
+
+  # ATR settings
+  atr_period: 14
+  atr_multiplier: 1.5              # Tighter stops to compensate for more trades
+
+  # Breakout detection
+  breakout_channel: 8              # 8-hour breakouts (was 24)
+  min_breakout_atr_mult: 0.15      # Weak momentum passes (was 0.3)
+
+  # Pullback and Entry
+  pullback_ema: 10                 # Shallower pullbacks allowed
+  min_body_ratio: 0.2              # Barely any body required
+
+  # Exits — Fixed RR
+  initial_sl_atr: 1.5
+  rr_ratio: 2.0                    # Lower RR (1:2) to hit targets faster
+
+  # Filters
+  min_atr_threshold: 0.0002        # Lowered absolute minimum ATR
+  min_bars_between_trades: 4       # Very short cooldown (was 15)
+  allow_multiple_positions: false  
+  trading_sessions:
+    - LONDON
+    - NEW_YORK
+    - TOKYO                      # Added Tokyo session for more opportunities
+
+# Timeframe assignment 
+timeframes:
+  execution: H1                    # entry, breakout, ATR
+  trend: H4                        # trend detection
+
+# Backtest settings
+backtest:
+  spread_pips: 1.5
+  slippage_pips: 0.5
+  initial_balance: 100
+  execution_mode: conservative     
+  min_trades: 100                  
+
+# Logging
+logging:
+  level: INFO
+  format: json                     

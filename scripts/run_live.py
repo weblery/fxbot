@@ -13,7 +13,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.core.config import get_settings
 from app.core.logger import get_logger
+from app.execution.broker import Order
 from app.data.mt5_client import MT5Client
+from app.core.constants import Timeframe
+from app.data.fetcher import DataFetcher
 from app.strategy.engine import StrategyEngine
 from app.data.transformer import transform_raw_data
 from app.execution.mt5_broker import MT5Broker
@@ -35,6 +38,7 @@ def main():
     
     broker = MT5Broker()
     engine = StrategyEngine(settings)
+    fetcher = DataFetcher(client)
     
     try:
         with client:
@@ -52,10 +56,10 @@ def main():
                     
                     for symbol in settings.symbols.keys():
                         # Fetch live candles from MT5
-                        h1_raw = broker.get_rates(symbol, "H1", count=300)
-                        h4_raw = broker.get_rates(symbol, "H4", count=300)
+                        h1_raw = fetcher.fetch_ohlc(symbol, Timeframe.H1, num_bars=300)
+                        h4_raw = fetcher.fetch_ohlc(symbol, Timeframe.H4, num_bars=300)
                         
-                        if h1_raw is None or h4_raw is None:
+                        if h1_raw is None or h4_raw is None or h1_raw.empty or h4_raw.empty:
                             continue
                             
                         h1_df = transform_raw_data(h1_raw)
@@ -66,9 +70,20 @@ def main():
                         
                         if signal:
                             logger.info(f"🔥 LIVE SIGNAL: {symbol} {signal.direction.value}")
-                            # Execute Order
-                            # result = broker.place_order(signal)
-                            # logger.info(f"📝 Execution Result: {result}")
+                            
+                            # Safely construct the live order with a micro-lot (0.01)
+                            order = Order(
+                                symbol=symbol,
+                                direction=signal.direction,
+                                lot_size=0.01,
+                                entry_price=signal.trade_idea.entry_price,
+                                stop_loss=signal.trade_idea.stop_loss,
+                                take_profit=signal.trade_idea.take_profit
+                            )
+                            
+                            # Execute Order via MT5!
+                            result = broker.send_order(order)
+                            logger.info(f"📝 Execution Result: {result.message}")
                     
                     # Cooldown to avoid multi-trigger in same minute
                     time.sleep(60)

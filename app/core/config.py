@@ -151,7 +151,7 @@ def load_settings(config_path: Path | str | None = None) -> Settings:
     else:
         path = Path(config_path)
 
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         raw: dict[str, Any] = yaml.safe_load(f)
 
     return Settings(**raw)

@@ -5,35 +5,14 @@
 
 account_currency: USD
 
-# Per-symbol settings (Using the Elite 9 Pairs for high win rate)
+# Per-symbol settings (High-Frequency Gold/Kiwi Bot)
 symbols:
-  EURUSD:
-    pip_size: 0.0001
-    contract_size: 100000
-  USDJPY:
-    pip_size: 0.01
-    contract_size: 100000
-  EURJPY:
-    pip_size: 0.01
-    contract_size: 100000
-  GBPJPY:
-    pip_size: 0.01
-    contract_size: 100000
-  CHFJPY:
-    pip_size: 0.01
-    contract_size: 100000
-  CADJPY:
-    pip_size: 0.01
-    contract_size: 100000
-  USDCAD:
-    pip_size: 0.0001
-    contract_size: 100000
-  BTCUSD:
-    pip_size: 1.0
-    contract_size: 1
   NZDUSD:
     pip_size: 0.0001
     contract_size: 100000
+  XAUUSD:
+    pip_size: 0.1
+    contract_size: 1
 
 # Risk management
 risk:
@@ -44,39 +23,38 @@ risk:
 # Strategy parameters (v3: Volatility Breakout)
 strategy:
   trend_method: ema                # Trend filter
-  ema_fast: 20                     # Faster trend detection (was 50)
-  ema_slow: 100                    # Faster trend detection (was 200)
+  ema_fast: 20                     # Faster trend detection 
+  ema_slow: 100                    # Faster trend detection 
 
-  # Volatility squeeze detection (DISABLED for higher frequency)
+  # Volatility squeeze detection (Re-introduced slightly)
   squeeze_atr_fast: 14
   squeeze_atr_slow: 50
-  squeeze_ratio: 1.0               # Anything passes
-  min_squeeze_bars: 0              # No squeeze required at all
+  squeeze_ratio: 0.90              # Tighter squeeze restored
+  min_squeeze_bars: 2              # Require 2 hours of squeeze
 
   # ATR settings
   atr_period: 14
-  atr_multiplier: 1.5              # Tighter stops to compensate for more trades
+  atr_multiplier: 1.5              # Tighter stops 
 
   # Breakout detection
-  breakout_channel: 8              # 8-hour breakouts (was 24)
-  min_breakout_atr_mult: 0.15      # Weak momentum passes (was 0.3)
+  breakout_channel: 12             # 12-hour breakouts 
+  min_breakout_atr_mult: 0.35      # Strict momentum restored
 
   # Pullback and Entry
-  pullback_ema: 10                 # Shallower pullbacks allowed
-  min_body_ratio: 0.2              # Barely any body required
+  pullback_ema: 15                 
+  min_body_ratio: 0.3              
 
   # Exits — Fixed RR
-  initial_sl_atr: 1.5
-  rr_ratio: 2.0                    # Lower RR (1:2) to hit targets faster
+  initial_sl_atr: 1.2              # Even tighter stop loss for day trading
+  rr_ratio: 1.2                    # Lower RR (1:1.2) to boost win rate
 
   # Filters
-  min_atr_threshold: 0.0002        # Lowered absolute minimum ATR
-  min_bars_between_trades: 4       # Very short cooldown (was 15)
+  min_atr_threshold: 0.0004        # Filter out completely dead markets
+  min_bars_between_trades: 8       # 8 hour cooldown
   allow_multiple_positions: false  
   trading_sessions:
     - LONDON
     - NEW_YORK
-    - TOKYO                      # Added Tokyo session for more opportunities
 
 # Timeframe assignment 
 timeframes:

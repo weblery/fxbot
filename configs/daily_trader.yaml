@@ -1,0 +1,78 @@
+# ═══════════════════════════════════════════════════════════════
+#  FOREXBOT Configuration — DAILY TRADER (Target: 1 Trade/Day)
+# ═══════════════════════════════════════════════════════════════
+
+account_currency: USD
+
+# Per-symbol settings (High-Frequency JPY Pairs)
+symbols:
+  USDJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  EURJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  AUDJPY:
+    pip_size: 0.01
+    contract_size: 100000
+
+# Risk management
+risk:
+  per_trade: 0.01                  
+  max_trades_per_session: 5        
+  max_daily_drawdown: 0.06         
+
+# Strategy parameters (v3: Volatility Breakout)
+strategy:
+  trend_method: ema                
+  ema_fast: 20                     
+  ema_slow: 100                    
+
+  # Volatility squeeze detection 
+  squeeze_atr_fast: 14
+  squeeze_atr_slow: 50
+  squeeze_ratio: 0.92              # Slightly relaxed from 0.90
+  min_squeeze_bars: 2              # Maintain 2 hours of squeeze for safety
+
+  # ATR settings
+  atr_period: 14
+  atr_multiplier: 1.5              
+
+  # Breakout detection
+  breakout_channel: 10             # Reduced from 12 to 10 for slightly faster triggers
+  min_breakout_atr_mult: 0.30      # Slightly lower momentum to increase frequency 
+
+  # Pullback and Entry
+  pullback_ema: 15                 
+  min_body_ratio: 0.3              
+
+  # Exits — Fixed RR
+  initial_sl_atr: 1.2              
+  rr_ratio: 1.2                    
+
+  # Filters
+  min_atr_threshold: 0.0004        
+  min_bars_between_trades: 8       
+  allow_multiple_positions: false  # Kept false to prevent correlation traps
+  trading_sessions:
+    - LONDON
+    - NEW_YORK
+    - TOKYO
+
+# Timeframe assignment 
+timeframes:
+  execution: H1                    
+  trend: H4                        
+
+# Backtest settings
+backtest:
+  spread_pips: 1.5
+  slippage_pips: 0.5
+  initial_balance: 100
+  execution_mode: conservative     
+  min_trades: 100                  
+
+# Logging
+logging:
+  level: INFO
+  format: json                     

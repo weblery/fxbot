@@ -1,21 +1,15 @@
 """
-Strategy Engine — orchestrates the full analysis pipeline.
+Strategy Engine — orchestrates the full analysis pipeline for live execution.
 
-Pipeline (each step is a gate — fails early if any step returns None/False):
-  1. Session filter    → is the current time in LONDON or NEW_YORK?
-  2. ATR threshold     → is volatility above minimum? (skip chop)
-  3. Trend detection   → EMA(50) vs EMA(200) on H4
-  4. Pullback check    → price touched EMA(20) on H1
-  5. Entry confirmation → candle body ratio + direction alignment
-  6. Exit calculation  → ATR-based SL (with floor) + RR-based TP
+Pipeline (Volatility Breakout System - matched to backtester):
+  1. Session filter    → is the current time in active sessions?
+  2. Absolute ATR threshold → skip low-vol chop
+  3. Squeeze condition → must be compressed for min N bars
+  4. Breakout condition → close beyond Donchian channel
+  5. Breakout magnitude → candle range >= mult * ATR
+  6. H4 Trend Alignment → filter counter-trend breakouts
 
 Output: TradeIdea or None
-
-CRITICAL RULES:
-  - Uses CLOSED candles only (no data leakage)
-  - Entry price is the signal candle's close (backtest uses next open)
-  - H4 trend data and H1 execution data are explicitly separated
-  - Every decision step is logged to the reasoning dict
 """
 
 from __future__ import annotations
@@ -23,16 +17,12 @@ from __future__ import annotations
 from datetime import datetime
 
 import pandas as pd
+import numpy as np
 
 from app.core.config import Settings, get_settings
 from app.core.constants import TradeDirection
 from app.core.logger import get_logger
 from app.models.trade import TradeIdea
-from app.strategy.trend import detect_trend
-from app.strategy.pullback import detect_pullback
-from app.strategy.atr import calculate_atr
-from app.strategy.entry import check_entry
-from app.strategy.exit import calculate_stop_loss, calculate_take_profit
 from app.utils.math_utils import pips_to_price
 from app.utils.time_utils import is_in_session
 
@@ -40,10 +30,10 @@ logger = get_logger("strategy.engine")
 
 
 class StrategyEngine:
-    """Orchestrates the trading strategy analysis pipeline.
-
-    All analysis uses CLOSED candles only. The engine does not handle
-    execution timing — that's the backtest engine's job.
+    """Orchestrates the trading strategy analysis pipeline for live trading.
+    
+    This implementation exactly mirrors app.backtesting.engine.py to ensure
+    live trading behaves identically to backtested results.
     """
 
     def __init__(self, settings: Settings | None = None):
@@ -58,148 +48,131 @@ class StrategyEngine:
         symbol: str,
         current_time: datetime | None = None,
     ) -> TradeIdea | None:
-        """Run the full strategy pipeline on closed candle data.
+        """Run the full Volatility Breakout strategy pipeline on closed candle data.
 
         Args:
-            h1_df: H1 OHLC DataFrame (CLOSED candles only — df.iloc[:i]).
-            h4_df: H4 OHLC DataFrame (CLOSED candles only — synced to current time).
+            h1_df: H1 OHLC DataFrame (CLOSED candles only).
+            h4_df: H4 OHLC DataFrame (CLOSED candles only).
             symbol: Trading symbol (e.g., 'EURUSD').
             current_time: Timestamp of the analysis (for session filtering).
 
         Returns:
             TradeIdea if all gates pass, None otherwise.
         """
-        reasoning = {}
-
         # ──────────────────────────────────────────────
         # Gate 1: Session filter
         # ──────────────────────────────────────────────
         if current_time is not None:
-            in_session = is_in_session(current_time, self.strategy_config.trading_sessions)
-            reasoning["session_filter"] = {
-                "time": str(current_time),
-                "sessions": self.strategy_config.trading_sessions,
-                "in_session": in_session,
-            }
-            if not in_session:
-                logger.debug("Rejected: outside trading session", symbol=symbol)
+            if not is_in_session(current_time, self.strategy_config.trading_sessions):
                 return None
 
         # ──────────────────────────────────────────────
-        # Gate 2: ATR threshold (skip low-vol chop)
+        # Helper: ATR function
         # ──────────────────────────────────────────────
-        atr = calculate_atr(h1_df, period=self.strategy_config.atr_period)
-        reasoning["atr"] = {
-            "value": atr,
-            "threshold": self.strategy_config.min_atr_threshold,
-        }
-
-        if atr is None:
-            logger.debug("Rejected: ATR calculation failed", symbol=symbol)
-            return None
-
-        if atr < self.strategy_config.min_atr_threshold:
-            reasoning["atr"]["passed"] = False
-            logger.debug(
-                f"Rejected: ATR {atr:.5f} below threshold "
-                f"{self.strategy_config.min_atr_threshold}",
-                symbol=symbol,
-            )
-            return None
-        reasoning["atr"]["passed"] = True
+        def _atr(df: pd.DataFrame, period: int) -> pd.Series:
+            high = df["high"]
+            low = df["low"]
+            close = df["close"]
+            prev_close = close.shift(1)
+            tr1 = high - low
+            tr2 = (high - prev_close).abs()
+            tr3 = (low - prev_close).abs()
+            tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+            return tr.ewm(alpha=1.0 / period, adjust=False).mean()
 
         # ──────────────────────────────────────────────
-        # Gate 3: Trend detection (H4)
+        # Gate 2: Absolute ATR threshold
         # ──────────────────────────────────────────────
-        trend = detect_trend(
-            h4_df,
-            ema_fast_period=self.strategy_config.ema_fast,
-            ema_slow_period=self.strategy_config.ema_slow,
-        )
-        reasoning["trend"] = {
-            "direction": trend.value if trend else "NONE",
-            "method": self.strategy_config.trend_method,
-            "ema_fast": self.strategy_config.ema_fast,
-            "ema_slow": self.strategy_config.ema_slow,
-        }
-
-        if trend is None:
-            logger.debug("Rejected: no clear trend", symbol=symbol)
+        h1_atr_fast = _atr(h1_df, self.strategy_config.squeeze_atr_fast)
+        atr = float(h1_atr_fast.iloc[-1])
+        if np.isnan(atr) or atr < self.strategy_config.min_atr_threshold:
             return None
 
         # ──────────────────────────────────────────────
-        # Gate 4: Pullback detection (H1)
+        # Gate 3: Squeeze condition
         # ──────────────────────────────────────────────
-        pullback = detect_pullback(
-            h1_df,
-            trend_direction=trend,
-            pullback_ema_period=self.strategy_config.pullback_ema,
-        )
-        reasoning["pullback"] = {"detected": pullback}
-
-        if not pullback:
-            logger.debug("Rejected: no pullback detected", symbol=symbol)
+        h1_atr_slow = _atr(h1_df, self.strategy_config.squeeze_atr_slow)
+        squeeze_ratio = h1_atr_fast / h1_atr_slow
+        is_squeezed = squeeze_ratio < self.strategy_config.squeeze_ratio
+        
+        # Count consecutive squeezed bars
+        squeeze_blocks = (~is_squeezed).cumsum()
+        squeeze_consecutive = is_squeezed.groupby(squeeze_blocks).cumsum()
+        
+        # We check if it was squeezed UP TO the breakout (the bar prior to the breakout close)
+        # So we look at the second to last closed candle's squeeze status
+        consec_squeezed = int(squeeze_consecutive.iloc[-2]) if len(squeeze_consecutive) > 1 else 0
+        if consec_squeezed < self.strategy_config.min_squeeze_bars:
             return None
 
         # ──────────────────────────────────────────────
-        # Gate 5: Entry confirmation (H1)
+        # Gate 4: Breakout condition (Donchian Channel)
         # ──────────────────────────────────────────────
-        signal_close = check_entry(
-            h1_df,
-            trend_direction=trend,
-            min_body_ratio=self.strategy_config.min_body_ratio,
-        )
-        reasoning["entry"] = {
-            "signal_close": signal_close,
-            "min_body_ratio": self.strategy_config.min_body_ratio,
-        }
+        # Shift(1) so the channel is formed by the PREVIOUS N bars, not including current bar
+        h1_donchian_high = h1_df["high"].rolling(window=self.strategy_config.breakout_channel).max().shift(1)
+        h1_donchian_low = h1_df["low"].rolling(window=self.strategy_config.breakout_channel).min().shift(1)
 
-        if signal_close is None:
-            logger.debug("Rejected: entry candle not confirmed", symbol=symbol)
+        close = float(h1_df["close"].iloc[-1])
+        donchian_hi = float(h1_donchian_high.iloc[-1])
+        donchian_lo = float(h1_donchian_low.iloc[-1])
+
+        is_long_breakout = close > donchian_hi
+        is_short_breakout = close < donchian_lo
+
+        if not is_long_breakout and not is_short_breakout:
+            return None
+
+        direction = TradeDirection.LONG if is_long_breakout else TradeDirection.SHORT
+
+        # ──────────────────────────────────────────────
+        # Gate 5: Breakout Magnitude
+        # ──────────────────────────────────────────────
+        high = float(h1_df["high"].iloc[-1])
+        low = float(h1_df["low"].iloc[-1])
+        if (high - low) < (self.strategy_config.min_breakout_atr_mult * atr):
             return None
 
         # ──────────────────────────────────────────────
-        # Gate 6: Exit calculation (SL + TP)
+        # Gate 6: H4 Trend Alignment
         # ──────────────────────────────────────────────
-        # Calculate minimum SL distance from config (pips → price)
-        min_sl_distance = pips_to_price(
+        h4_ema_fast = h4_df["close"].ewm(span=self.strategy_config.ema_fast, adjust=False).mean()
+        h4_ema_slow = h4_df["close"].ewm(span=self.strategy_config.ema_slow, adjust=False).mean()
+        
+        fast = float(h4_ema_fast.iloc[-1])
+        slow = float(h4_ema_slow.iloc[-1])
+
+        if direction == TradeDirection.LONG and fast <= slow:
+            return None
+        if direction == TradeDirection.SHORT and fast >= slow:
+            return None
+
+        # ──────────────────────────────────────────────
+        # Calculate Exit (Fixed TP/SL)
+        # ──────────────────────────────────────────────
+        min_sl_dist = pips_to_price(
             self.strategy_config.min_sl_pips, symbol, self.symbols_config
         )
+        
+        sl_dist = max(atr * self.strategy_config.initial_sl_atr, min_sl_dist)
+        if direction == TradeDirection.LONG:
+            sl = close - sl_dist
+            tp = close + (sl_dist * self.strategy_config.rr_ratio)
+        else:
+            sl = close + sl_dist
+            tp = close - (sl_dist * self.strategy_config.rr_ratio)
 
-        sl = calculate_stop_loss(
-            entry_price=signal_close,
-            atr=atr,
-            direction=trend,
-            atr_multiplier=self.strategy_config.atr_multiplier,
-            min_sl_distance=min_sl_distance,
-        )
+        rr = self.strategy_config.rr_ratio
 
-        tp = calculate_take_profit(
-            entry_price=signal_close,
-            stop_loss=sl,
-            direction=trend,
-            rr_ratio=self.strategy_config.rr_ratio,
-        )
-
-        sl_distance = abs(signal_close - sl)
-        tp_distance = abs(tp - signal_close)
-        rr = tp_distance / sl_distance if sl_distance > 0 else 0
-
-        reasoning["exit"] = {
-            "stop_loss": round(sl, 5),
-            "take_profit": round(tp, 5),
-            "sl_distance": round(sl_distance, 5),
-            "tp_distance": round(tp_distance, 5),
-            "risk_reward": round(rr, 2),
+        reasoning = {
+            "v3_volatility_breakout": True,
+            "squeeze_bars": consec_squeezed,
+            "breakout_atr_mult": round((high - low) / atr, 2),
         }
 
-        # ──────────────────────────────────────────────
-        # Build TradeIdea
-        # ──────────────────────────────────────────────
         trade_idea = TradeIdea(
             symbol=symbol,
-            direction=trend,
-            entry_price=signal_close,  # Backtest engine replaces with next open
+            direction=direction,
+            entry_price=close,
             stop_loss=sl,
             take_profit=tp,
             atr=atr,
@@ -209,14 +182,9 @@ class StrategyEngine:
         )
 
         logger.info(
-            "🟢 Trade signal generated",
-            symbol=symbol,
-            direction=trend.value,
-            entry=round(signal_close, 5),
-            sl=round(sl, 5),
-            tp=round(tp, 5),
-            rr=round(rr, 2),
-            atr=round(atr, 5),
+            f"🟢 Live Volatility Breakout Signal! {symbol} | "
+            f"Direction: {direction.value} | "
+            f"Entry: {round(close, 5)} | SL: {round(sl, 5)} | TP: {round(tp, 5)}"
         )
 
         return trade_idea

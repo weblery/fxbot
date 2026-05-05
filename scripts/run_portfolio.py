@@ -129,8 +129,8 @@ def main():
             "direction": t.trade_idea.direction.value,
             "entry_price": t.trade_idea.entry_price,
             "exit_price": t.exit_price,
-            "pnl": round(t.pnl, 2),
-            "pnl_pips": round(t.pnl_pips, 1),
+            "pnl": round(t.pnl, 2) if t.pnl is not None else 0.0,
+            "pnl_pips": round(t.pnl_pips, 1) if t.pnl_pips is not None else 0.0,
             "portfolio_balance": round(balance, 2)
         }
         trade_dicts.append(d)

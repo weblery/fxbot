@@ -1,0 +1,85 @@
+# ═══════════════════════════════════════════════════════════════
+#  FOREXBOT Configuration — DAY TRADER (Target: 3+ Trades/Day)
+#  Optimized using mathematical cooldown reductions.
+# ═══════════════════════════════════════════════════════════════
+
+account_currency: USD
+
+# Per-symbol settings (Filtered Day-Trading Pairs)
+symbols:
+  USDJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  EURJPY:
+    pip_size: 0.01
+    contract_size: 100000
+  NZDUSD:
+    pip_size: 0.0001
+    contract_size: 100000
+  XAUUSD:
+    pip_size: 0.1
+    contract_size: 1
+  AUDJPY:
+    pip_size: 0.01
+    contract_size: 100000
+
+# Risk management
+risk:
+  per_trade: 0.01                  
+  max_trades_per_session: 5        
+  max_daily_drawdown: 0.06         
+
+# Strategy parameters (v3: Volatility Breakout)
+strategy:
+  trend_method: ema                
+  ema_fast: 20                     
+  ema_slow: 100                    
+
+  # Volatility squeeze detection
+  squeeze_atr_fast: 14
+  squeeze_atr_slow: 50
+  squeeze_ratio: 0.85              # Relaxed to 0.85 to allow more setups
+  min_squeeze_bars: 1              # Reduced to 1 hour wait
+
+  # ATR settings
+  atr_period: 14
+  atr_multiplier: 1.5              
+
+  # Breakout detection
+  breakout_channel: 8              # Reduced from 12 to 8 for more frequent signals
+  min_breakout_atr_mult: 0.35      # Maintained strict momentum 
+
+  # Pullback and Entry
+  pullback_ema: 15                 
+  min_body_ratio: 0.3              
+
+  # Exits — Fixed RR
+  initial_sl_atr: 1.2              
+  rr_ratio: 1.2                    
+
+  # Filters
+  min_atr_threshold: 0.0004        
+  min_bars_between_trades: 3       # Slashed to 3 bars to unlock 2-3 setups per session
+  allow_multiple_positions: true   # Enabled true portfolio-level concurrency
+  trading_sessions:
+    - LONDON
+    - NEW_YORK
+    - TOKYO                        # Tokyo added for massive JPY pair opportunities
+
+# Timeframe assignment 
+timeframes:
+  execution: H1                    
+  trend: H4                        
+
+# Backtest settings
+backtest:
+  spread_pips: 1.5
+  slippage_pips: 0.5
+  initial_balance: 100
+  execution_mode: conservative     
+  min_trades: 100                  
+
+# Logging
+logging:
+  level: INFO
+  format: json                     

@@ -6,13 +6,13 @@ account_currency: USD
 
 # Per-symbol settings (High-Frequency JPY Pairs)
 symbols:
-  USDJPY:
+  USDJPYm:
     pip_size: 0.01
     contract_size: 100000
-  EURJPY:
+  EURJPYm:
     pip_size: 0.01
     contract_size: 100000
-  AUDJPY:
+  AUDJPYm:
     pip_size: 0.01
     contract_size: 100000
 

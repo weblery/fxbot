@@ -20,6 +20,7 @@ from app.data.fetcher import DataFetcher
 from app.strategy.engine import StrategyEngine
 from app.data.transformer import transform_raw_data
 from app.execution.mt5_broker import MT5Broker
+from app.services.telegram import send_telegram_message, send_heartbeat
 
 logger = get_logger("run_live")
 
@@ -48,8 +49,26 @@ def main():
 
             logger.info("✅ Connection established. Bot is now active.")
             
+            # 2. Startup Telegram Alert
+            send_telegram_message(
+                f"🚀 *System Started*\n"
+                f"Portfolio: {', '.join(settings.symbols.keys())}\n"
+                f"Timeframe: {settings.timeframes.execution}\n"
+                f"Heartbeat: every {settings.heartbeat_hours} hours."
+            )
+            
+            last_heartbeat = datetime.now()
+            
             while True:
                 now = datetime.now()
+                
+                # 3. Heartbeat Checker
+                hours_since_last = (now - last_heartbeat).total_seconds() / 3600
+                if hours_since_last >= settings.heartbeat_hours:
+                    send_heartbeat(list(settings.symbols.keys()))
+                    last_heartbeat = now
+
+                # 4. Hourly Scan
                 # Check for signals at the start of every hour (or poll)
                 if now.minute == 0 and now.second < 10:
                     logger.info(f"🔔 Hourly Scan Started: {now.strftime('%Y-%m-%d %H:%M')}")
@@ -84,6 +103,23 @@ def main():
                             # Execute Order via MT5!
                             result = broker.send_order(order)
                             logger.info(f"📝 Execution Result: {result.message}")
+
+                            # 5. Telegram Trade Alert
+                            if result.success:
+                                send_telegram_message(
+                                    f"🔥 *LIVE TRADE EXECUTED*\n"
+                                    f"Symbol: {symbol}\n"
+                                    f"Direction: {signal.direction.value.upper()}\n"
+                                    f"Price: {signal.entry_price}\n"
+                                    f"SL: {signal.stop_loss}\n"
+                                    f"TP: {signal.take_profit}"
+                                )
+                            else:
+                                send_telegram_message(
+                                    f"⚠️ *ORDER FAILED*\n"
+                                    f"Symbol: {symbol}\n"
+                                    f"Error: {result.message}"
+                                )
                     
                     # Cooldown to avoid multi-trigger in same minute
                     time.sleep(60)

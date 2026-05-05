@@ -116,6 +116,11 @@ class Settings(BaseModel):
     timeframes: TimeframeConfig = TimeframeConfig()
     backtest: BacktestConfig = BacktestConfig()
     logging: LoggingConfig = LoggingConfig()
+    
+    # Notifications (can be set in YAML or via env vars)
+    telegram_bot_token: str | None = os.environ.get("TELEGRAM_BOT_TOKEN")
+    telegram_chat_id: str | None = os.environ.get("TELEGRAM_CHAT_ID")
+    heartbeat_hours: int = 4
 
 
 def _find_config_path() -> Path:

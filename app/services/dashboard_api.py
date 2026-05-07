@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import json
 import os
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 app = FastAPI(title="FOREXBOT Control Center")
 
@@ -22,27 +22,39 @@ class TradeRequest(BaseModel):
     sl: Optional[float] = None
     tp: Optional[float] = None
 
+class ToggleRequest(BaseModel):
+    bot_name: str
+
 @app.get("/api/status")
 async def get_status():
-    if not STATE_FILE.exists():
-        return {"is_active": False, "mt5_connected": False, "last_update": None}
+    DATA_DIR = PROJECT_ROOT / "data"
+    state_files = list(DATA_DIR.glob("bot_state_*.json"))
     
-    with open(STATE_FILE, "r") as f:
-        return json.load(f)
+    bots = []
+    for sf in state_files:
+        try:
+            with open(sf, "r") as f:
+                bots.append(json.load(f))
+        except: continue
+    
+    return {"bots": bots}
 
 @app.post("/api/toggle")
-async def toggle_bot():
-    if not STATE_FILE.exists():
-        state = {"is_active": True}
-    else:
-        with open(STATE_FILE, "r") as f:
-            state = json.load(f)
-        state["is_active"] = not state.get("is_active", True)
+async def toggle_bot(request: ToggleRequest):
+    bot_file = PROJECT_ROOT / "data" / f"bot_state_{request.bot_name}.json"
     
-    with open(STATE_FILE, "w") as f:
+    if not bot_file.exists():
+        raise HTTPException(status_code=404, detail=f"Bot '{request.bot_name}' not found")
+    
+    with open(bot_file, "r") as f:
+        state = json.load(f)
+    
+    state["is_active"] = not state.get("is_active", True)
+    
+    with open(bot_file, "w") as f:
         json.dump(state, f)
     
-    return {"success": True, "is_active": state["is_active"]}
+    return {"success": True, "bot_name": request.bot_name, "is_active": state["is_active"]}
 
 @app.get("/api/logs")
 async def get_logs():

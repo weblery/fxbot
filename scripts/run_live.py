@@ -6,7 +6,7 @@ Syncs with MT5, monitors elite symbols, and executes trades automatically.
 import time
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -21,9 +21,16 @@ from app.strategy.engine import StrategyEngine
 from app.data.transformer import transform_raw_data
 from app.execution.mt5_broker import MT5Broker
 from app.services.telegram import send_telegram_message, send_heartbeat
+from app.core.config import _find_config_path
 import json
 
-STATE_FILE = Path(__file__).parent.parent / "data" / "bot_state.json"
+# Unique state file per configuration to support multiple bots
+try:
+    cfg_name = _find_config_path().stem
+except:
+    cfg_name = "default"
+    
+STATE_FILE = Path(__file__).parent.parent / "data" / f"bot_state_{cfg_name}.json"
 
 logger = get_logger("run_live")
 
@@ -56,8 +63,9 @@ def main():
         state = {
             "is_active": is_active,
             "mt5_connected": mt5_conn,
-            "last_update": datetime.utcnow().isoformat(),
-            "symbols": list(settings.symbols.keys())
+            "last_update": datetime.now(timezone.utc).isoformat(),
+            "symbols": list(settings.symbols.keys()),
+            "config": cfg_name
         }
         STATE_FILE.parent.mkdir(exist_ok=True)
         with open(STATE_FILE, "w") as f:
@@ -86,11 +94,11 @@ def main():
                 f"Heartbeat: every {settings.heartbeat_hours} hours."
             )
             
-            last_heartbeat = datetime.utcnow()
+            last_heartbeat = datetime.now(timezone.utc)
             update_state(True, True)
             
             while True:
-                now = datetime.utcnow()
+                now = datetime.now(timezone.utc)
                 
                 # Update status file periodically (Heartbeat)
                 if now.second % 30 == 0:

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from app.core.constants import TradeDirection, TradeState
 
@@ -25,7 +25,7 @@ class TradeIdea:
     direction: TradeDirection
     entry_price: float               # Next candle open + spread + slippage
     stop_loss: float
-    take_profit: float | None        # None for trailing stop strategies
+    take_profit: Optional[float]        # None for trailing stop strategies
     atr: float
     risk_reward: float
     timestamp: datetime              # Time the signal was generated
@@ -50,12 +50,12 @@ class TradeResult:
     """
     trade_idea: TradeIdea
     state: TradeState
-    exit_price: float | None = None
-    pnl: float | None = None         # Profit/loss in account currency
-    pnl_pips: float | None = None    # Profit/loss in pips
-    exit_time: datetime | None = None
-    highest_high: float | None = None # Track max adverse/favorable excursion
-    lowest_low: float | None = None
+    exit_price: Optional[float] = None
+    pnl: Optional[float] = None         # Profit/loss in account currency
+    pnl_pips: Optional[float] = None    # Profit/loss in pips
+    exit_time: Optional[datetime] = None
+    highest_high: Optional[float] = None # Track max adverse/favorable excursion
+    lowest_low: Optional[float] = None
 
     @property
     def is_winner(self) -> bool:

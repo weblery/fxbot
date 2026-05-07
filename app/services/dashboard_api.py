@@ -13,12 +13,14 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 STATE_FILE = PROJECT_ROOT / "data" / "bot_state.json"
 LOG_DIR = PROJECT_ROOT / "logs"
 
+from typing import Optional
+
 class TradeRequest(BaseModel):
     symbol: str
     direction: str
     lots: float = 0.01
-    sl: float | None = None
-    tp: float | None = None
+    sl: Optional[float] = None
+    tp: Optional[float] = None
 
 @app.get("/api/status")
 async def get_status():

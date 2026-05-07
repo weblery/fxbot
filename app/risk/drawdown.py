@@ -79,7 +79,7 @@ class DrawdownTracker:
             return True
         return False
 
-    def reset(self, new_balance: float | None = None) -> None:
+    def reset(self, new_balance: Optional[float] = None) -> None:
         """Reset tracker (e.g., at start of new trading day).
 
         Args:

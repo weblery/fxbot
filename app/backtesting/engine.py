@@ -69,7 +69,7 @@ class BacktestEngine:
     1000x faster than recomputing EMAs on every iteration.
     """
 
-    def __init__(self, settings: Settings | None = None):
+    def __init__(self, settings: Optional[Settings] = None):
         self.settings = settings or get_settings()
         self.simulator = TradeSimulator(self.settings)
 
@@ -142,8 +142,8 @@ class BacktestEngine:
         # ──────────────────────────────────────────
         # Phase 2: Bar-by-bar execution
         # ──────────────────────────────────────────
-        open_trade: TradeResult | None = None
-        pending_signal: TradeIdea | None = None
+        open_trade: Optional[TradeResult] = None
+        pending_signal: Optional[TradeIdea] = None
         cooldown_remaining: int = 0  # v2: trade cooldown counter
 
         logger.info(
@@ -276,7 +276,7 @@ class BacktestEngine:
         cfg,
         min_sl_dist: float,
         min_h4: int,
-    ) -> TradeIdea | None:
+    ) -> Optional[TradeIdea]:
         """Check for a trade signal using pre-calculated indicators.
 
         v3 gates (Volatility Breakout System):

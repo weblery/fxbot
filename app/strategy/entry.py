@@ -23,7 +23,7 @@ def check_entry(
     df: pd.DataFrame,
     trend_direction: TradeDirection,
     min_body_ratio: float = 0.6,
-) -> float | None:
+) -> Optional[float]:
     """Check if the most recent closed candle confirms a valid entry.
 
     The entry price returned is the CLOSE of the signal candle.

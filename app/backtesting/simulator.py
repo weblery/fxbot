@@ -30,7 +30,7 @@ class TradeSimulator:
     Handles spread, slippage, and SL/TP resolution order.
     """
 
-    def __init__(self, settings: Settings | None = None):
+    def __init__(self, settings: Optional[Settings] = None):
         self.settings = settings or get_settings()
         self.backtest_config = self.settings.backtest
 
@@ -81,7 +81,7 @@ class TradeSimulator:
         bar_close: float,
         bar_time: datetime,
         symbol: str,
-    ) -> TradeResult | None:
+    ) -> Optional[TradeResult]:
         """Check if a bar triggers SL or TP for an open trade.
 
         Handles candle ambiguity:

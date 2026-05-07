@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import yaml
 from pydantic import BaseModel, field_validator
@@ -118,8 +118,8 @@ class Settings(BaseModel):
     logging: LoggingConfig = LoggingConfig()
     
     # Notifications (can be set in YAML or via env vars)
-    telegram_bot_token: str | None = os.environ.get("TELEGRAM_BOT_TOKEN")
-    telegram_chat_id: str | None = os.environ.get("TELEGRAM_CHAT_ID")
+    telegram_bot_token: Optional[str] = os.environ.get("TELEGRAM_BOT_TOKEN")
+    telegram_chat_id: Optional[str] = os.environ.get("TELEGRAM_CHAT_ID")
     heartbeat_hours: int = 4
 
 
@@ -142,7 +142,7 @@ def _find_config_path() -> Path:
     )
 
 
-def load_settings(config_path: Path | str | None = None) -> Settings:
+def load_settings(config_path: Path | Optional[str] = None) -> Settings:
     """Load and validate settings from YAML file.
 
     Args:

@@ -22,7 +22,7 @@ class DataStorage:
     Storage path: data/{symbol}_{timeframe}.csv
     """
 
-    def __init__(self, data_dir: str | Path | None = None):
+    def __init__(self, data_dir: str | Optional[Path] = None):
         if data_dir is None:
             self.data_dir = Path(__file__).parent.parent.parent / "data"
         else:

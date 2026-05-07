@@ -26,8 +26,8 @@ class RiskManager:
 
     def __init__(
         self,
-        settings: Settings | None = None,
-        drawdown_tracker: DrawdownTracker | None = None,
+        settings: Optional[Settings] = None,
+        drawdown_tracker: Optional[DrawdownTracker] = None,
     ):
         self.settings = settings or get_settings()
         self.risk_config = self.settings.risk

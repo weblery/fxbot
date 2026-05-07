@@ -30,7 +30,7 @@ def detect_trend(
     ema_fast_period: int = 50,
     ema_slow_period: int = 200,
     slope_lookback: int = 5,
-) -> TradeDirection | None:
+) -> Optional[TradeDirection]:
     """Detect market trend direction using EMA crossover and slope.
 
     Uses CLOSED candles only — the DataFrame must NOT include the current

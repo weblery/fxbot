@@ -37,7 +37,7 @@ class BacktestMetrics:
 
 def calculate_metrics(
     trades: list[TradeResult],
-    equity_curve: list[float] | None = None,
+    equity_curve: Optional[list[float]] = None,
     min_trades: int = 100,
 ) -> BacktestMetrics:
     m = BacktestMetrics()

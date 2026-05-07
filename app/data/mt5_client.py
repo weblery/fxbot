@@ -41,9 +41,9 @@ class MT5Client:
 
     def __init__(
         self,
-        login: int | None = None,
-        password: str | None = None,
-        server: str | None = None,
+        login: Optional[int] = None,
+        password: Optional[str] = None,
+        server: Optional[str] = None,
     ):
         self.login = login
         self.password = password

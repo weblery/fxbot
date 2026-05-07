@@ -21,7 +21,7 @@ logger = get_logger("backtesting.report")
 def generate_report(
     result: BacktestResult,
     min_trades: int = 100,
-    output_dir: str | Path | None = None,
+    output_dir: str | Optional[Path] = None,
 ) -> BacktestMetrics:
     """Generate a backtest report with console output and saved files.
 

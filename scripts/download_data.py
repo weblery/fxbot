@@ -60,7 +60,7 @@ SYMBOL_PARAMS = {
 def _generate_h1_data(
     symbol: str,
     days: int = 500,
-    start_date: datetime | None = None,
+    start_date: Optional[datetime] = None,
 ) -> pd.DataFrame:
     """Generate realistic H1 OHLC data using geometric Brownian motion.
 

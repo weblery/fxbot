@@ -26,7 +26,7 @@ class DataFetcher:
     Use DataStorage to load cached CSV data instead.
     """
 
-    def __init__(self, mt5_client: MT5Client | None = None):
+    def __init__(self, mt5_client: Optional[MT5Client] = None):
         self.client = mt5_client
 
     @retry(max_attempts=3, delay=1.0)

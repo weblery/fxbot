@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any
+from typing import Optional, Any
 
 from app.core.constants import TradeDirection
 from app.models.position import Position
@@ -26,7 +26,7 @@ class Order:
 @dataclass
 class OrderResult:
     success: bool
-    ticket: int | None = None
+    ticket: Optional[int] = None
     message: str = ""
 
 

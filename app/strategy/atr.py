@@ -14,7 +14,7 @@ from app.core.logger import get_logger
 logger = get_logger("strategy.atr")
 
 
-def calculate_atr(df: pd.DataFrame, period: int = 14) -> float | None:
+def calculate_atr(df: pd.DataFrame, period: int = 14) -> Optional[float]:
     """Calculate the current ATR value using Wilder's smoothing.
 
     ATR = EMA of True Range, where:

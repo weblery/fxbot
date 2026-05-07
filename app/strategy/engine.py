@@ -36,7 +36,7 @@ class StrategyEngine:
     live trading behaves identically to backtested results.
     """
 
-    def __init__(self, settings: Settings | None = None):
+    def __init__(self, settings: Optional[Settings] = None):
         self.settings = settings or get_settings()
         self.strategy_config = self.settings.strategy
         self.symbols_config = self.settings.symbols
@@ -46,8 +46,8 @@ class StrategyEngine:
         h1_df: pd.DataFrame,
         h4_df: pd.DataFrame,
         symbol: str,
-        current_time: datetime | None = None,
-    ) -> TradeIdea | None:
+        current_time: Optional[datetime] = None,
+    ) -> Optional[TradeIdea]:
         """Run the full Volatility Breakout strategy pipeline on closed candle data.
 
         Args:

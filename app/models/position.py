@@ -26,10 +26,10 @@ class Position:
     stop_loss: float
     take_profit: float
     state: TradeState = TradeState.OPEN
-    open_time: datetime | None = None
-    close_time: datetime | None = None
-    close_price: float | None = None
-    pnl: float | None = None
+    open_time: Optional[datetime] = None
+    close_time: Optional[datetime] = None
+    close_price: Optional[float] = None
+    pnl: Optional[float] = None
 
     @property
     def is_open(self) -> bool:

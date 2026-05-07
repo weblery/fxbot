@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOREXBOT | Control Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #05070a;
+            --card-bg: rgba(20, 25, 35, 0.7);
+            --accent-primary: #00d2ff;
+            --accent-secondary: #3a7bd5;
+            --status-green: #00ff9d;
+            --status-red: #ff3d71;
+            --text-main: #e0e6ed;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 210, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(58, 123, 213, 0.05) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            background: var(--card-bg);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--status-green);
+            box-shadow: 0 0 10px var(--status-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(0, 210, 255, 0.2);
+        }
+
+        h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .big-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .switch-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .toggle-btn {
+            width: 100%;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            border: none;
+            font-weight: 800;
+            font-size: 1.125rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #00ff9d, #00d2ff);
+            color: #05070a;
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
+        }
+
+        .toggle-btn.inactive {
+            background: #252a35;
+            color: var(--text-dim);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-btn:active {
+            transform: scale(0.98);
+        }
+
+        .log-container {
+            grid-column: 1 / -1;
+            background: #0a0c10;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .log-line {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            color: var(--text-dim);
+        }
+
+        .log-line.info { color: #00d2ff; }
+        .log-line.error { color: #ff3d71; }
+        .log-line.success { color: #00ff9d; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+
+        .symbol-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .symbol-tag {
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">FOREXBOT_V3</div>
+            <div class="status-badge">
+                <div id="status-pulse" class="pulse"></div>
+                <span id="status-text">MT5 CONNECTED</span>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>System Control</h2>
+                <div class="switch-container">
+                    <button id="toggle-btn" class="toggle-btn inactive">Loading...</button>
+                    <p id="update-text" style="font-size: 0.75rem; color: var(--text-dim); text-align: center;">Last Sync: --:--:--</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Active Portfolio</h2>
+                <div id="symbol-list" class="symbol-list">
+                    <!-- Symbols populated here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Live Intelligence Stream</h2>
+            <div id="log-viewer" class="log-container">
+                <div class="log-line">Initializing dashboard connection...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const statusPulse = document.getElementById('status-pulse');
+        const statusText = document.getElementById('status-text');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const updateText = document.getElementById('update-text');
+        const symbolList = document.getElementById('symbol-list');
+        const logViewer = document.getElementById('log-viewer');
+
+        let isBotActive = false;
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                isBotActive = data.is_active;
+                
+                // Update Button
+                if (isBotActive) {
+                    toggleBtn.innerText = "System Enabled";
+                    toggleBtn.className = "toggle-btn active";
+                } else {
+                    toggleBtn.innerText = "System Paused";
+                    toggleBtn.className = "toggle-btn inactive";
+                }
+
+                // Update Pulse
+                if (data.mt5_connected) {
+                    statusPulse.style.background = "var(--status-green)";
+                    statusPulse.style.boxShadow = "0 0 10px var(--status-green)";
+                    statusText.innerText = "MT5 CONNECTED";
+                } else {
+                    statusPulse.style.background = "var(--status-red)";
+                    statusPulse.style.boxShadow = "0 0 10px var(--status-red)";
+                    statusText.innerText = "MT5 DISCONNECTED";
+                }
+
+                // Update Time
+                if (data.last_update) {
+                    const date = new Date(data.last_update);
+                    updateText.innerText = `Last Sync: ${date.toLocaleTimeString()}`;
+                }
+
+                // Update Symbols
+                if (data.symbols) {
+                    symbolList.innerHTML = data.symbols.map(s => `<div class="symbol-tag">${s}</div>`).join('');
+                }
+
+            } catch (err) {
+                console.error("Failed to fetch status", err);
+            }
+        }
+
+        async function toggleBot() {
+            try {
+                const response = await fetch('/api/toggle', { method: 'POST' });
+                const data = await response.json();
+                fetchStatus();
+            } catch (err) {
+                console.error("Failed to toggle bot", err);
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                const data = await response.json();
+                
+                if (data.logs) {
+                    logViewer.innerHTML = data.logs.map(line => {
+                        let cls = 'info';
+                        if (line.includes('ERROR')) cls = 'error';
+                        if (line.includes('SIGNAL') || line.includes('SUCCESS')) cls = 'success';
+                        
+                        // Try to parse JSON log line if possible
+                        try {
+                            const parsed = JSON.parse(line);
+                            return `<div class="log-line ${cls}">${parsed.time} | ${parsed.message}</div>`;
+                        } catch {
+                            return `<div class="log-line ${cls}">${line}</div>`;
+                        }
+                    }).join('');
+                    
+                    // Auto-scroll to bottom
+                    logViewer.scrollTop = logViewer.scrollHeight;
+                }
+            } catch (err) {
+                console.error("Failed to fetch logs", err);
+            }
+        }
+
+        toggleBtn.addEventListener('click', toggleBot);
+
+        // Polling
+        setInterval(fetchStatus, 5000);
+        setInterval(fetchLogs, 5000);
+
+        // Initial load
+        fetchStatus();
+        fetchLogs();
+    </script>
+</body>
+</html>

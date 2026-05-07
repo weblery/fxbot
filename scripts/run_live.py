@@ -21,6 +21,9 @@ from app.strategy.engine import StrategyEngine
 from app.data.transformer import transform_raw_data
 from app.execution.mt5_broker import MT5Broker
 from app.services.telegram import send_telegram_message, send_heartbeat
+import json
+
+STATE_FILE = Path(__file__).parent.parent / "data" / "bot_state.json"
 
 logger = get_logger("run_live")
 
@@ -49,6 +52,24 @@ def main():
     engine = StrategyEngine(settings)
     fetcher = DataFetcher(client)
     
+    def update_state(is_active: bool, mt5_conn: bool):
+        state = {
+            "is_active": is_active,
+            "mt5_connected": mt5_conn,
+            "last_update": datetime.utcnow().isoformat(),
+            "symbols": list(settings.symbols.keys())
+        }
+        STATE_FILE.parent.mkdir(exist_ok=True)
+        with open(STATE_FILE, "w") as f:
+            json.dump(state, f)
+
+    def is_bot_enabled():
+        if not STATE_FILE.exists(): return True
+        try:
+            with open(STATE_FILE, "r") as f:
+                return json.load(f).get("is_active", True)
+        except: return True
+    
     try:
         with client:
             if not client.is_connected:
@@ -66,9 +87,19 @@ def main():
             )
             
             last_heartbeat = datetime.utcnow()
+            update_state(True, True)
             
             while True:
                 now = datetime.utcnow()
+                
+                # Update status file periodically (Heartbeat)
+                if now.second % 30 == 0:
+                    update_state(is_bot_enabled(), client.is_connected)
+
+                # Check if bot is disabled via Dashboard
+                if not is_bot_enabled():
+                    time.sleep(1)
+                    continue
                 
                 # 3. Heartbeat Checker
                 hours_since_last = (now - last_heartbeat).total_seconds() / 3600

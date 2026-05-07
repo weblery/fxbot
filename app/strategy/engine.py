@@ -64,6 +64,7 @@ class StrategyEngine:
         # ──────────────────────────────────────────────
         if current_time is not None:
             if not is_in_session(current_time, self.strategy_config.trading_sessions):
+                logger.debug(f"⏭️ Gate 1 (Session) skipped for {symbol} at {current_time} (UTC)")
                 return None
 
         # ──────────────────────────────────────────────
@@ -86,6 +87,7 @@ class StrategyEngine:
         h1_atr_fast = _atr(h1_df, self.strategy_config.squeeze_atr_fast)
         atr = float(h1_atr_fast.iloc[-1])
         if np.isnan(atr) or atr < self.strategy_config.min_atr_threshold:
+            logger.debug(f"⏭️ Gate 2 (ATR) skipped for {symbol}: ATR {atr:.5f} < threshold {self.strategy_config.min_atr_threshold}")
             return None
 
         # ──────────────────────────────────────────────
@@ -103,6 +105,7 @@ class StrategyEngine:
         # So we look at the second to last closed candle's squeeze status
         consec_squeezed = int(squeeze_consecutive.iloc[-2]) if len(squeeze_consecutive) > 1 else 0
         if consec_squeezed < self.strategy_config.min_squeeze_bars:
+            logger.debug(f"⏭️ Gate 3 (Squeeze) skipped for {symbol}: {consec_squeezed} bars (needed {self.strategy_config.min_squeeze_bars})")
             return None
 
         # ──────────────────────────────────────────────
@@ -120,6 +123,7 @@ class StrategyEngine:
         is_short_breakout = close < donchian_lo
 
         if not is_long_breakout and not is_short_breakout:
+            logger.debug(f"⏭️ Gate 4 (Breakout) skipped for {symbol}: Close {close:.5f} within Donchian {donchian_lo:.5f}-{donchian_hi:.5f}")
             return None
 
         direction = TradeDirection.LONG if is_long_breakout else TradeDirection.SHORT
@@ -130,6 +134,7 @@ class StrategyEngine:
         high = float(h1_df["high"].iloc[-1])
         low = float(h1_df["low"].iloc[-1])
         if (high - low) < (self.strategy_config.min_breakout_atr_mult * atr):
+            logger.debug(f"⏭️ Gate 5 (Magnitude) skipped for {symbol}: Range {(high - low):.5f} < {self.strategy_config.min_breakout_atr_mult}*ATR")
             return None
 
         # ──────────────────────────────────────────────
@@ -142,8 +147,10 @@ class StrategyEngine:
         slow = float(h4_ema_slow.iloc[-1])
 
         if direction == TradeDirection.LONG and fast <= slow:
+            logger.debug(f"⏭️ Gate 6 (Trend) skipped for {symbol}: Direction LONG but H4 EMA Fast {fast:.5f} <= Slow {slow:.5f}")
             return None
         if direction == TradeDirection.SHORT and fast >= slow:
+            logger.debug(f"⏭️ Gate 6 (Trend) skipped for {symbol}: Direction SHORT but H4 EMA Fast {fast:.5f} >= Slow {slow:.5f}")
             return None
 
         # ──────────────────────────────────────────────

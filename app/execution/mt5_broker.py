@@ -16,11 +16,16 @@ class MT5Broker(BrokerInterface):
     """MetaTrader 5 broker implementation (Phase 3)."""
 
     def send_order(self, order: Order) -> OrderResult:
-        import MetaTrader5 as mt5
+        try:
+            import MetaTrader5 as mt5
+        except ImportError:
+            logger.error("MetaTrader5 module not found. Please run 'pip install MetaTrader5' on a Windows environment.")
+            return OrderResult(success=False, message="MetaTrader5 module not found.")
+
         logger.info(f"Preparing MT5 order for {order.symbol} ({order.direction.value})")
         
         action = mt5.TRADE_ACTION_DEAL
-        order_type = mt5.ORDER_TYPE_BUY if order.direction.value == "long" else mt5.ORDER_TYPE_SELL
+        order_type = mt5.ORDER_TYPE_BUY if order.direction.value == "LONG" else mt5.ORDER_TYPE_SELL
         
         # Ensure symbol is visible in Market Watch
         mt5.symbol_select(order.symbol, True)

@@ -27,6 +27,14 @@ logger = get_logger("run_live")
 def main():
     settings = get_settings()
     logger.info("🚀 INITIALIZING LIVE EXECUTION BOT...")
+    # Log where settings are coming from
+    from app.core.config import _find_config_path
+    try:
+        cfg_path = _find_config_path()
+        logger.info(f"📂 Loaded config: {cfg_path}")
+    except Exception:
+        logger.warning("📂 Config path could not be determined.")
+        
     logger.info(f"📊 Portfolio: {list(settings.symbols.keys())}")
     
     # 1. Connect to MT5
@@ -57,10 +65,10 @@ def main():
                 f"Heartbeat: every {settings.heartbeat_hours} hours."
             )
             
-            last_heartbeat = datetime.now()
+            last_heartbeat = datetime.utcnow()
             
             while True:
-                now = datetime.now()
+                now = datetime.utcnow()
                 
                 # 3. Heartbeat Checker
                 hours_since_last = (now - last_heartbeat).total_seconds() / 3600

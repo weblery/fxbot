@@ -16,6 +16,7 @@ dependencies = [
     "loguru>=0.7.0",
     "matplotlib>=3.8.0",
     "python-dotenv>=1.0.0",
+    "MetaTrader5>=5.0.45",
 ]
 
 [project.optional-dependencies]
